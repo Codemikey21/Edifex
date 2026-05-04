@@ -1,0 +1,51 @@
+services:
+
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: ../../infrastructure/docker/backend/Dockerfile
+    container_name: edifex_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=edifex
+      - DB_USERNAME=edifex_user
+      - DB_PASSWORD=edifex_secret
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=edifex_redis
+      - REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./apps/backend:/var/www
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: edifex_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: edifex
+      POSTGRES_USER: edifex_user
+      POSTGRES_PASSWORD: edifex_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: edifex_redis
+    restart: unless-stopped
+    command: redis-server --requirepass edifex_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
