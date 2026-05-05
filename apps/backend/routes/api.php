@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\WorkerController;
 use App\Http\Controllers\Api\JobController;
+use App\Http\Controllers\Api\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -14,8 +15,9 @@ Route::prefix('v1')->group(function () {
     });
 
     // Rutas públicas del marketplace
-    Route::get('jobs',      [JobController::class, 'index']);
-    Route::get('jobs/{id}', [JobController::class, 'show']);
+    Route::get('jobs',                        [JobController::class, 'index']);
+    Route::get('jobs/{id}',                   [JobController::class, 'show']);
+    Route::get('workers/{id}/reviews',        [ReviewController::class, 'workerReviews']);
 
     // Rutas protegidas con JWT
     Route::middleware('auth:api')->group(function () {
@@ -35,10 +37,13 @@ Route::prefix('v1')->group(function () {
 
         // Jobs
         Route::prefix('jobs')->group(function () {
-            Route::post('/',           [JobController::class, 'store']);
-            Route::get('my-jobs',      [JobController::class, 'myJobs']);
-            Route::patch('{id}/status',[JobController::class, 'updateStatus']);
+            Route::post('/',            [JobController::class, 'store']);
+            Route::get('my-jobs',       [JobController::class, 'myJobs']);
+            Route::patch('{id}/status', [JobController::class, 'updateStatus']);
         });
+
+        // Reviews
+        Route::post('reviews', [ReviewController::class, 'store']);
 
     });
 
