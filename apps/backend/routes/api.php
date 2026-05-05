@@ -25,6 +25,7 @@ Route::prefix('v1')->group(function () {
             Route::post('profile',             [WorkerController::class, 'createOrUpdateProfile']);
             Route::post('skills',              [WorkerController::class, 'addSkill']);
             Route::post('certifications',      [WorkerController::class, 'addCertification']);
+            Route::post('cv',                  [WorkerController::class, 'uploadCV']);
         });
 
     });

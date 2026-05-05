@@ -8,6 +8,7 @@ use App\Models\WorkerSkill;
 use App\Models\WorkerCertification;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class WorkerController extends Controller
@@ -134,5 +135,35 @@ class WorkerController extends Controller
             'message' => 'Certificación agregada exitosamente',
             'data'    => $certification,
         ], 201);
+    }
+
+    public function uploadCV(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'cv' => 'required|file|mimes:pdf|max:10240',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Archivo inválido. Solo se permiten PDFs de máximo 10MB',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $user     = auth('api')->user();
+        $profile  = WorkerProfile::firstOrCreate(['user_id' => $user->id]);
+        $file     = $request->file('cv');
+        $filename = 'cvs/' . $user->id . '_' . time() . '.pdf';
+
+        Storage::disk('s3')->put($filename, file_get_contents($file), 'private');
+
+        $url = 'http://localhost:9000/edifex-storage/' . $filename;
+
+        $profile->update(['cv_url' => $url]);
+
+        return response()->json([
+            'message' => 'CV subido exitosamente',
+            'cv_url'  => $url,
+        ]);
     }
 }
