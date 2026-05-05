@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\WorkerController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\ChatController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -15,9 +16,9 @@ Route::prefix('v1')->group(function () {
     });
 
     // Rutas públicas del marketplace
-    Route::get('jobs',                        [JobController::class, 'index']);
-    Route::get('jobs/{id}',                   [JobController::class, 'show']);
-    Route::get('workers/{id}/reviews',        [ReviewController::class, 'workerReviews']);
+    Route::get('jobs',                 [JobController::class, 'index']);
+    Route::get('jobs/{id}',            [JobController::class, 'show']);
+    Route::get('workers/{id}/reviews', [ReviewController::class, 'workerReviews']);
 
     // Rutas protegidas con JWT
     Route::middleware('auth:api')->group(function () {
@@ -44,6 +45,14 @@ Route::prefix('v1')->group(function () {
 
         // Reviews
         Route::post('reviews', [ReviewController::class, 'store']);
+
+        // Chat
+        Route::prefix('chat')->group(function () {
+            Route::get('conversations',              [ChatController::class, 'getConversations']);
+            Route::post('conversations',             [ChatController::class, 'createConversation']);
+            Route::get('conversations/{id}/messages',[ChatController::class, 'getMessages']);
+            Route::post('messages',                  [ChatController::class, 'sendMessage']);
+        });
 
     });
 
