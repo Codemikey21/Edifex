@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="200 60 280 280">  <defs>
+    <style>
+      @keyframes rotateSun { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes scaleIn { from { transform: scale(0.85); opacity:0; } to { transform: scale(1); opacity:1; } }
+      .sun-rays { transform-origin: 340px 175px; animation: rotateSun 14s linear infinite; }
+      .bldg { animation: fadeInUp 0.9s ease-out 0.2s both; }
+      .logo-wrap { animation: scaleIn 0.7s ease-out both; }
+    </style>
+  </defs>
+
+  <g class="logo-wrap">
+    <g class="sun-rays">
+      <line x1="340" y1="82" x2="340" y2="68" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="389" y1="96" x2="399" y2="85" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="417" y1="140" x2="431" y2="135" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="417" y1="210" x2="431" y2="215" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="389" y1="254" x2="399" y2="265" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="340" y1="268" x2="340" y2="282" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="291" y1="254" x2="281" y2="265" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="263" y1="210" x2="249" y2="215" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="263" y1="140" x2="249" y2="135" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="291" y1="96" x2="281" y2="85" stroke="#C8920A" stroke-width="5" stroke-linecap="round"/>
+    </g>
+
+    <circle cx="340" cy="175" r="88" fill="#F5C318"/>
+    <circle cx="340" cy="175" r="74" fill="#F7D060" opacity="0.5"/>
+
+    <g class="bldg">
+      <rect x="256" y="128" width="52" height="112" rx="3" fill="white" opacity="0.95"/>
+      <rect x="262" y="135" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="262" y="142" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="262" y="149" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="262" y="156" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="262" y="163" width="40" height="3" rx="1" fill="#E8C840" opacity="0.5"/>
+      <rect x="262" y="170" width="40" height="3" rx="1" fill="#E8C840" opacity="0.5"/>
+      <rect x="262" y="177" width="40" height="3" rx="1" fill="#E8C840" opacity="0.4"/>
+      <rect x="262" y="184" width="40" height="3" rx="1" fill="#E8C840" opacity="0.4"/>
+      <rect x="262" y="191" width="40" height="3" rx="1" fill="#E8C840" opacity="0.3"/>
+      <rect x="262" y="198" width="40" height="3" rx="1" fill="#E8C840" opacity="0.3"/>
+      <rect x="274" y="222" width="16" height="18" rx="2" fill="#C8920A" opacity="0.7"/>
+
+      <rect x="372" y="128" width="52" height="112" rx="3" fill="white" opacity="0.95"/>
+      <rect x="378" y="135" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="378" y="142" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="378" y="149" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="378" y="156" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="378" y="163" width="40" height="3" rx="1" fill="#E8C840" opacity="0.5"/>
+      <rect x="378" y="170" width="40" height="3" rx="1" fill="#E8C840" opacity="0.5"/>
+      <rect x="378" y="177" width="40" height="3" rx="1" fill="#E8C840" opacity="0.4"/>
+      <rect x="378" y="184" width="40" height="3" rx="1" fill="#E8C840" opacity="0.4"/>
+      <rect x="378" y="191" width="40" height="3" rx="1" fill="#E8C840" opacity="0.3"/>
+      <rect x="378" y="198" width="40" height="3" rx="1" fill="#E8C840" opacity="0.3"/>
+      <rect x="390" y="222" width="16" height="18" rx="2" fill="#C8920A" opacity="0.7"/>
+
+      <rect x="314" y="98" width="52" height="142" rx="3" fill="white"/>
+      <polygon points="340,78 326,100 354,100" fill="white"/>
+      <rect x="320" y="106" width="40" height="3" rx="1" fill="#E8C840" opacity="0.7"/>
+      <rect x="320" y="113" width="40" height="3" rx="1" fill="#E8C840" opacity="0.7"/>
+      <rect x="320" y="120" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="320" y="127" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="320" y="134" width="40" height="3" rx="1" fill="#E8C840" opacity="0.6"/>
+      <rect x="320" y="141" width="40" height="3" rx="1" fill="#E8C840" opacity="0.5"/>
+      <rect x="320" y="148" width="40" height="3" rx="1" fill="#E8C840" opacity="0.5"/>
+      <rect x="320" y="155" width="40" height="3" rx="1" fill="#E8C840" opacity="0.4"/>
+      <rect x="320" y="162" width="40" height="3" rx="1" fill="#E8C840" opacity="0.4"/>
+      <rect x="320" y="169" width="40" height="3" rx="1" fill="#E8C840" opacity="0.4"/>
+      <rect x="320" y="176" width="40" height="3" rx="1" fill="#E8C840" opacity="0.3"/>
+      <rect x="320" y="183" width="40" height="3" rx="1" fill="#E8C840" opacity="0.3"/>
+      <rect x="330" y="222" width="20" height="18" rx="2" fill="#C8920A" opacity="0.8"/>
+
+      <rect x="248" y="240" width="184" height="8" rx="2" fill="#8B6510"/>
+      <rect x="240" y="247" width="200" height="4" rx="2" fill="#6B4D0A" opacity="0.5"/>
+    </g>
+  </g>
+
+  
+</svg>

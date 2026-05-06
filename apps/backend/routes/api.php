@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\AdminController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\MarketplaceController;
 
 Route::prefix('v1')->group(function () {
 
@@ -16,9 +17,12 @@ Route::prefix('v1')->group(function () {
         Route::post('login',    [AuthController::class, 'login']);
     });
 
+ 
     // Rutas públicas del marketplace
     Route::get('jobs',                 [JobController::class, 'index']);
     Route::get('jobs/{id}',            [JobController::class, 'show']);
+    Route::get('workers',              [MarketplaceController::class, 'getWorkers']);
+    Route::get('workers/{id}',         [MarketplaceController::class, 'getWorker']);
     Route::get('workers/{id}/reviews', [ReviewController::class, 'workerReviews']);
 
     // Rutas protegidas con JWT
