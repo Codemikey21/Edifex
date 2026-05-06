@@ -6,6 +6,7 @@ import WorkerDashboard from './pages/worker/WorkerDashboard'
 import ClientDashboard from './pages/client/ClientDashboard'
 import WorkerOnboarding from './pages/worker/WorkerOnboarding'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import ChatPage from './pages/chat/ChatPage'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/worker/onboarding" element={<WorkerOnboarding />} />
         <Route path="/client/dashboard" element={<ClientDashboard />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/chat" element={<ChatPage />} />
       </Routes>
     </BrowserRouter>
   )
