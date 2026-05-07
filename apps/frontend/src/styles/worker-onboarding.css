@@ -1,0 +1,370 @@
+/* ===== WORKER ONBOARDING STYLES ===== */
+
+.wo-page {
+  min-height: 100vh;
+  background-color: #faf9f5;
+  font-family: 'Inter', sans-serif;
+  color: #1b1c1a;
+}
+
+/* ===== HEADER ===== */
+.wo-header {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background-color: #faf9f5;
+  z-index: 50;
+  border-bottom: 1px solid rgba(195,200,191,0.3);
+}
+
+.wo-header-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.wo-brand {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #061a07;
+}
+
+/* ===== STEP INDICATOR ===== */
+.wo-steps {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+}
+
+.wo-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wo-step-bar {
+  height: 4px;
+  width: 100%;
+  border-radius: 9999px;
+  background-color: #c3c8bf;
+  transition: background-color 0.3s;
+}
+
+.wo-step.active .wo-step-bar { background-color: #061a07; }
+.wo-step.done .wo-step-bar { background-color: #3f6743; }
+
+.wo-step-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #737971;
+  transition: color 0.3s;
+}
+
+.wo-step.active .wo-step-label { color: #061a07; }
+.wo-step.done .wo-step-label { color: #3f6743; }
+
+/* ===== MAIN ===== */
+.wo-main {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 32px 80px;
+}
+
+/* ===== SECTION ===== */
+.wo-section-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #061a07;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.wo-section-desc {
+  font-size: 16px;
+  color: #434841;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+/* ===== FORM FIELDS ===== */
+.wo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.wo-field label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #434841;
+  margin-left: 4px;
+}
+
+.wo-field input,
+.wo-field select,
+.wo-field textarea {
+  width: 100%;
+  background: white;
+  border: 1px solid #bdebbd;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 16px;
+  color: #1b1c1a;
+  outline: none;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+  appearance: none;
+}
+
+.wo-field input:focus,
+.wo-field select:focus,
+.wo-field textarea:focus {
+  border-color: #061a07;
+  box-shadow: 0 0 0 2px rgba(6,26,7,0.1);
+}
+
+.wo-field input::placeholder,
+.wo-field textarea::placeholder { color: #c3c8bf; }
+
+.wo-field textarea { resize: none; }
+
+.wo-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .wo-field-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== SKILL CHIPS ===== */
+.wo-skills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+@media (min-width: 480px) {
+  .wo-skills-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.wo-skill-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 9999px;
+  font-size: 15px;
+  font-weight: 400;
+  border: 1.5px solid #c3c8bf;
+  background: white;
+  color: #1b1c1a;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.wo-skill-chip:hover {
+  border-color: #3f6743;
+}
+
+.wo-skill-chip.selected {
+  background-color: #bdebbd;
+  border-color: #3f6743;
+  color: #436c47;
+  font-weight: 600;
+}
+
+.wo-skill-chip .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* ===== CV UPLOAD ===== */
+.wo-upload-zone {
+  width: 100%;
+  padding: 40px 24px;
+  border: 2px dashed #c3c8bf;
+  border-radius: 16px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 20px;
+}
+
+.wo-upload-zone:hover { border-color: #061a07; }
+
+.wo-upload-zone.has-file {
+  border-color: #3f6743;
+  background-color: rgba(189, 235, 189, 0.1);
+}
+
+.wo-upload-icon {
+  width: 64px;
+  height: 64px;
+  background-color: #efeeea;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wo-upload-icon .material-symbols-outlined {
+  font-size: 32px;
+  color: #061a07;
+}
+
+.wo-upload-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #061a07;
+  margin-bottom: 4px;
+}
+
+.wo-upload-sub {
+  font-size: 15px;
+  color: #737971;
+}
+
+.wo-upload-note {
+  padding: 4px 14px;
+  background-color: #f5f3ef;
+  border: 1px solid #c3c8bf;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #737971;
+}
+
+.wo-upload-filename {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3f6743;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== CV BANNER ===== */
+.wo-cv-banner {
+  width: 100%;
+  height: 180px;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 32px;
+  background: linear-gradient(135deg, #1a2f1a 0%, #3f6743 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 20px;
+}
+
+.wo-cv-banner-quote {
+  font-size: 15px;
+  font-style: italic;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+}
+
+.wo-cv-banner-icon {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  font-size: 80px !important;
+  color: rgba(255,255,255,0.08);
+}
+
+/* ===== BUTTONS ===== */
+.wo-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.wo-actions.has-back { justify-content: space-between; }
+
+.wo-btn-next {
+  padding: 12px 32px;
+  background-color: #061a07;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 4px 12px rgba(6,26,7,0.2);
+}
+
+.wo-btn-next:hover { background-color: #1a2f1a; }
+.wo-btn-next:active { transform: scale(0.97); }
+.wo-btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.wo-btn-back {
+  padding: 12px 32px;
+  background: none;
+  color: #061a07;
+  border: 1.5px solid #061a07;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.wo-btn-back:hover { background-color: #efeeea; }
+
+/* ===== ERROR ===== */
+.wo-error {
+  background-color: #ffdad6;
+  border: 1px solid #ba1a1a;
+  color: #93000a;
+  font-size: 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+/* ===== FOOTER ===== */
+.wo-footer {
+  border-top: 1px solid rgba(195,200,191,0.4);
+  padding: 24px 32px;
+  text-align: center;
+}
+
+.wo-footer p {
+  font-size: 14px;
+  color: #737971;
+}
