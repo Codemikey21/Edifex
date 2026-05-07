@@ -1,132 +1,286 @@
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../../services/api'
+import '../../styles/client-dashboard.css'
+
+const navItems = [
+  { icon: 'dashboard', label: 'Dashboard', active: true },
+  { icon: 'search', label: 'Buscar Operarios' },
+  { icon: 'construction', label: 'Mis Proyectos' },
+  { icon: 'request_quote', label: 'Mis Contrataciones' },
+  { icon: 'mail', label: 'Mensajes' },
+  { icon: 'settings', label: 'Configuración' },
+]
+
+const projects = [
+  {
+    title: 'Renovación Loft Moderno',
+    date: '15 Oct, 2024',
+    status: 'active',
+    worker: 'Juan Rivera',
+    budget: '$12,500',
+    progress: 65,
+  },
+  {
+    title: 'Instalación Eléctrica Cocina',
+    date: '22 Sep, 2024',
+    status: 'active',
+    worker: 'Marco Salas',
+    budget: '$1,800',
+    progress: 20,
+  },
+  {
+    title: 'Pintura Exterior Fachada',
+    date: '05 Oct, 2024',
+    status: 'pending',
+    worker: 'Ana Lopez',
+    budget: '$3,200',
+    progress: 0,
+    muted: true,
+  },
+]
+
+const workers = [
+  { name: 'Roberto Gomez', specialty: 'Maestro Carpintero', rating: '4.9', reviews: 124, verified: true, variant: 'filled' },
+  { name: 'Elena Ruiz', specialty: 'Arquitecta de Interiores', rating: '5.0', reviews: 86, verified: false, variant: 'outline' },
+]
 
 function ClientDashboard() {
   const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
-  const [jobs, setJobs] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (!storedUser) {
-      navigate('/login')
-      return
-    }
-    setUser(JSON.parse(storedUser))
-    fetchJobs()
-  }, [])
-
-  const fetchJobs = async () => {
-    try {
-      const res = await api.get('/jobs/my-jobs')
-      setJobs(res.data.data || [])
-    } catch (error) {
-      console.error('Error cargando trabajos')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const name = user.name?.split(' ')[0] || 'Cliente'
 
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    navigate('/')
+    navigate('/login')
   }
 
-  if (loading) return (
-    <div className="min-h-screen bg-[#F5F2ED] flex items-center justify-center">
-      <div className="text-[#1A2F1A] text-sm">Cargando...</div>
-    </div>
-  )
-
   return (
-    <div className="min-h-screen bg-[#F5F2ED]">
-      {/* Header */}
-      <div className="bg-[#1A2F1A] px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/src/assets/logo.svg" alt="Edifex" className="w-12 h-12 object-contain" />
-          <span className="text-white font-bold text-lg tracking-widest">EDIFEX</span>
+    <div className="cd-layout">
+
+      {/* SIDEBAR */}
+      <aside className="cd-sidebar">
+        <div className="cd-sidebar-logo">
+          <span>EDIFEX</span>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-white/70 text-sm">Hola, {user?.name}</span>
+
+        <nav className="cd-sidebar-nav">
+          {navItems.map((item) => (
+            <button
+              key={item.label}
+              className={`cd-nav-item ${item.active ? 'active' : ''}`}
+            >
+              <span className="material-symbols-outlined">{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="cd-sidebar-footer">
+          <div className="cd-user-info">
+            <div className="cd-user-avatar">
+              {name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="name">{user.name || 'Cliente'}</div>
+              <span className="cd-user-badge">Cliente</span>
+            </div>
+          </div>
           <button
             onClick={handleLogout}
-            className="text-white/70 text-sm hover:text-white transition-colors"
+            className="cd-nav-item"
+            style={{ marginTop: 12 }}
           >
+            <span className="material-symbols-outlined">logout</span>
             Cerrar sesión
           </button>
         </div>
-      </div>
+      </aside>
 
-      <div className="px-8 py-8 max-w-6xl mx-auto">
-        {/* Bienvenida */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-2xl font-medium text-[#1A2F1A]">Dashboard Cliente</h1>
-            <p className="text-gray-400 text-sm mt-1">Gestiona tus trabajos y contrataciones</p>
+      {/* MAIN */}
+      <main className="cd-main">
+
+        {/* HEADER */}
+        <header className="cd-header">
+          <div className="cd-header-left">
+            <h1>Bienvenido, {name}.</h1>
+            <p>Gestiona tus proyectos y descubre nuevos talentos para tu obra.</p>
           </div>
-          <button
-            onClick={() => navigate('/client/post-job')}
-            className="bg-[#1A2F1A] text-white text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-[#2D4A2D] transition-colors"
-          >
-            + Publicar trabajo
-          </button>
+          <div className="cd-header-right">
+            <button className="cd-btn-icon">
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+            <button className="cd-btn-primary">Publicar Trabajo</button>
+          </div>
+        </header>
+
+        {/* STATS */}
+        <div className="cd-stats">
+          <div className="cd-stat-card">
+            <span className="cd-stat-label">Proyectos Activos</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span className="cd-stat-value">03</span>
+              <span className="cd-stat-sub">+1 hoy</span>
+            </div>
+          </div>
+          <div className="cd-stat-card">
+            <span className="cd-stat-label">Operarios Contratados</span>
+            <span className="cd-stat-value">12</span>
+          </div>
+          <div className="cd-stat-card">
+            <span className="cd-stat-label">Presupuesto Gastado</span>
+            <span className="cd-stat-value">$4.250</span>
+          </div>
+          <div className="cd-stat-card">
+            <span className="cd-stat-label">Trabajos Completados</span>
+            <span className="cd-stat-value">28</span>
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[
-            { label: 'Trabajos publicados', value: jobs.length },
-            { label: 'En progreso', value: jobs.filter(j => j.status === 'in_progress').length },
-            { label: 'Completados', value: jobs.filter(j => j.status === 'completed').length },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-white rounded-2xl p-5 border border-[#E8E4DA]">
-              <div className="text-2xl font-medium text-[#1A2F1A]">{stat.value}</div>
-              <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+        {/* MAIN GRID */}
+        <div className="cd-grid">
 
-        {/* Lista de trabajos */}
-        <div className="bg-white rounded-2xl border border-[#E8E4DA] overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#E8E4DA]">
-            <h2 className="font-medium text-[#1A2F1A]">Mis trabajos</h2>
-          </div>
-
-          {jobs.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <p className="text-gray-400 text-sm">No tienes trabajos publicados aún.</p>
-              <button
-                onClick={() => navigate('/client/post-job')}
-                className="mt-4 bg-[#1A2F1A] text-white text-sm px-5 py-2.5 rounded-xl hover:bg-[#2D4A2D] transition-colors"
-              >
-                Publicar primer trabajo
-              </button>
+          {/* LEFT: Projects */}
+          <section>
+            <div className="cd-section-header">
+              <h2>Mis Proyectos Activos</h2>
+              <button>Ver todos</button>
             </div>
-          ) : (
-            <div className="divide-y divide-[#F0EBE0]">
-              {jobs.map((job) => (
-                <div key={job.id} className="px-6 py-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-[#1A2F1A]">{job.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{job.category} · {job.city}</p>
+            <div className="cd-projects">
+              {projects.map((p, i) => (
+                <div key={i} className={`cd-project-card ${p.muted ? 'muted' : ''}`}>
+                  <div className="cd-project-top">
+                    <div>
+                      <p className="cd-project-title">{p.title}</p>
+                      <div className="cd-project-date">
+                        <span className="material-symbols-outlined">calendar_today</span>
+                        Entrega: {p.date}
+                      </div>
+                    </div>
+                    <span className={`cd-badge ${p.status === 'active' ? 'cd-badge-active' : 'cd-badge-pending'}`}>
+                      {p.status === 'active' ? 'En Ejecución' : 'Pendiente Pago'}
+                    </span>
                   </div>
-                  <span className={`text-xs px-3 py-1 rounded-full ${
-                    job.status === 'published' ? 'bg-green-100 text-green-700' :
-                    job.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                    job.status === 'completed' ? 'bg-gray-100 text-gray-600' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {job.status}
-                  </span>
+
+                  <div className="cd-project-worker">
+                    <div className="cd-worker-avatar">
+                      {p.worker.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="cd-worker-label">Operario Asignado</p>
+                      <p className="cd-worker-name">{p.worker}</p>
+                    </div>
+                    <div className="cd-project-budget">
+                      <p className="cd-budget-label">Presupuesto</p>
+                      <p className="cd-budget-value">{p.budget}</p>
+                    </div>
+                  </div>
+
+                  <div className="cd-progress-wrap">
+                    <div className="cd-progress-top">
+                      <span>Progreso</span>
+                      <span>{p.progress}%</span>
+                    </div>
+                    <div className="cd-progress-bar">
+                      <div className="cd-progress-fill" style={{ width: `${p.progress}%` }} />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-          )}
+          </section>
+
+          {/* RIGHT: Workers */}
+          <section>
+            <div className="cd-section-header">
+              <h2>Operarios Recomendados</h2>
+            </div>
+            <div className="cd-workers">
+              {workers.map((w, i) => (
+                <div key={i} className="cd-worker-card">
+                  <div className="cd-worker-photo">
+                    <div className="cd-worker-photo-inner">
+                      {w.name.charAt(0)}
+                    </div>
+                    {w.verified && (
+                      <div className="cd-verified-badge">
+                        <span className="material-symbols-outlined"
+                          style={{ fontVariationSettings: "'FILL' 1" }}>
+                          verified
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <h4>{w.name}</h4>
+                  <span className="cd-worker-specialty">{w.specialty}</span>
+                  <div className="cd-worker-rating">
+                    <span className="material-symbols-outlined"
+                      style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    {w.rating} ({w.reviews} reseñas)
+                  </div>
+                  <button className={`cd-btn-hire ${w.variant === 'filled' ? 'cd-btn-hire-filled' : 'cd-btn-hire-outline'}`}>
+                    Contratar
+                  </button>
+                </div>
+              ))}
+
+              {/* Help Banner */}
+              <div className="cd-help-banner">
+                <h4>¿Necesitas ayuda?</h4>
+                <p>Nuestros asesores premium pueden ayudarte a elegir al mejor profesional para tu obra.</p>
+                <button className="cd-btn-chat">Chat Asistido</button>
+                <span className="material-symbols-outlined cd-help-icon">support_agent</span>
+              </div>
+            </div>
+          </section>
+
         </div>
-      </div>
+
+        {/* PROMO */}
+        <div className="cd-promo">
+          <div className="cd-promo-text">
+            <h2>Certificación Edifex de Oro</h2>
+            <p>Obtén la garantía extendida de Edifex para todos tus proyectos de renovación. El sello de oro asegura que cada etapa cumple con los más altos estándares arquitectónicos.</p>
+            <div className="cd-promo-actions">
+              <button className="cd-btn-primary">Saber Más</button>
+              <button className="cd-btn-outline-dark">Requisitos</button>
+            </div>
+          </div>
+          <div className="cd-promo-img">
+            <span className="material-symbols-outlined">workspace_premium</span>
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <footer className="cd-footer">
+          <div className="cd-footer-grid">
+            <div className="cd-footer-brand">
+              <h3>EDIFEX</h3>
+              <p>Construyendo el futuro de la arquitectura y los servicios de construcción con transparencia y profesionalidad.</p>
+            </div>
+            <div className="cd-footer-col">
+              <h5>Plataforma</h5>
+              <a href="#">Marketplace</a>
+              <a href="#">Servicios</a>
+              <a href="#">Proyectos</a>
+            </div>
+            <div className="cd-footer-col">
+              <h5>Legal</h5>
+              <a href="#">Privacy Policy</a>
+              <a href="#">Terms of Service</a>
+              <a href="#">Cookie Policy</a>
+            </div>
+            <div className="cd-footer-col">
+              <h5>Soporte</h5>
+              <a href="#">Contact Us</a>
+              <a href="#">Help Center</a>
+            </div>
+          </div>
+          <div className="cd-footer-bottom">
+            © 2024 Edifex Construction Services. All rights reserved.
+          </div>
+        </footer>
+
+      </main>
     </div>
   )
 }
