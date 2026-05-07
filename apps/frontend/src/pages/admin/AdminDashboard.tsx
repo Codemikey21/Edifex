@@ -1,228 +1,202 @@
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../../services/api'
+import '../../styles/admin-dashboard.css'
+
+const navItems = [
+  { icon: 'dashboard', label: 'Dashboard', active: true },
+  { icon: 'person', label: 'Usuarios' },
+  { icon: 'construction', label: 'Operarios' },
+  { icon: 'work', label: 'Trabajos' },
+  { icon: 'report', label: 'Reviews Reportadas' },
+  { icon: 'settings', label: 'Configuración' },
+]
+
+const pendingWorkers = [
+  { initial: 'R', color: 'green', name: 'Ricardo M.', specialty: 'Electricista Industrial', date: '14 Oct, 2024' },
+  { initial: 'M', color: 'teal', name: 'Marta S.', specialty: 'Arquitecta Técnica', date: '13 Oct, 2024' },
+  { initial: 'J', color: 'pink', name: 'Javier L.', specialty: 'Fontanería Pluvial', date: '12 Oct, 2024' },
+  { initial: 'C', color: 'gray', name: 'Carlos D.', specialty: 'Carpintería de Aluminio', date: '11 Oct, 2024' },
+]
+
+const activity = [
+  { dot: 'green', text: 'Nueva review reportada en el trabajo #TR-4592', time: 'Hace 15 minutos' },
+  { dot: 'dark', text: 'Operario Marta S. ha completado su perfil profesional', time: 'Hace 2 horas' },
+  { dot: 'teal', text: 'Pago procesado correctamente por el usuario Juan Pérez', time: 'Hace 5 horas' },
+  { dot: 'red', text: 'Alerta de seguridad: Intento de login fallido múltiples veces', time: 'Hace 8 horas' },
+]
 
 function AdminDashboard() {
   const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
-  const [stats, setStats] = useState<any>(null)
-  const [workers, setWorkers] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState('dashboard')
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (!storedUser) { navigate('/login'); return }
-    const u = JSON.parse(storedUser)
-    if (u.role !== 'admin') { navigate('/'); return }
-    setUser(u)
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
-    try {
-      const [statsRes, workersRes] = await Promise.all([
-        api.get('/admin/dashboard'),
-        api.get('/admin/workers?status=pending'),
-      ])
-      setStats(statsRes.data.data)
-      setWorkers(workersRes.data.data || [])
-    } catch (error) {
-      console.error('Error cargando datos admin')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleApprove = async (workerId: number) => {
-    try {
-      await api.patch(`/admin/workers/${workerId}/approve`)
-      setWorkers(workers.filter(w => w.user_id !== workerId))
-      setStats((prev: any) => ({ ...prev, pending_workers: prev.pending_workers - 1 }))
-    } catch (error) {
-      console.error('Error aprobando operario')
-    }
-  }
-
-  const handleSuspend = async (workerId: number) => {
-    try {
-      await api.patch(`/admin/workers/${workerId}/suspend`)
-      setWorkers(workers.filter(w => w.user_id !== workerId))
-    } catch (error) {
-      console.error('Error suspendiendo operario')
-    }
-  }
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const name = user.name?.split(' ')[0] || 'Admin'
 
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    navigate('/')
+    navigate('/login')
   }
 
-  if (loading) return (
-    <div className="min-h-screen bg-[#F5F2ED] flex items-center justify-center">
-      <div className="text-[#1A2F1A] text-sm">Cargando panel admin...</div>
-    </div>
-  )
-
   return (
-    <div className="min-h-screen bg-[#F5F2ED] flex">
+    <div className="ad-layout">
 
-      <div className="w-56 bg-[#1A2F1A] min-h-screen flex flex-col">
-        <div className="p-5 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <img src="/src/assets/logo.svg" alt="Edifex" className="w-10 h-10 object-contain" />
-            <span className="text-white font-bold text-sm tracking-widest">EDIFEX</span>
-          </div>
-          <div className="text-white/40 text-xs mt-1">Panel Admin</div>
+      {/* SIDEBAR */}
+      <aside className="ad-sidebar">
+        <div className="ad-sidebar-logo">
+          <h1>EDIFEX</h1>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
-          {[
-            { id: 'dashboard', label: 'Dashboard' },
-            { id: 'workers', label: 'Operarios' },
-            { id: 'users', label: 'Usuarios' },
-            { id: 'jobs', label: 'Trabajos' },
-          ].map((item) => (
+        <nav className="ad-sidebar-nav">
+          {navItems.map((item) => (
             <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all ${
-                activeTab === item.id
-                  ? 'bg-white/15 text-white font-medium'
-                  : 'text-white/60 hover:text-white hover:bg-white/10'
-              }`}
+              key={item.label}
+              className={`ad-nav-item ${item.active ? 'active' : ''}`}
             >
+              <span className="material-symbols-outlined">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
-          <div className="text-white/60 text-xs mb-1">{user?.name}</div>
-          <button onClick={handleLogout} className="text-white/40 text-xs hover:text-white transition-colors">
-            Cerrar sesion
+        <div className="ad-sidebar-footer">
+          <div className="ad-admin-info">
+            <div className="ad-admin-avatar">
+              {name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="ad-admin-name">{user.name || 'Administrador'}</div>
+              <span className="ad-admin-badge">Administrador</span>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="ad-nav-item"
+            style={{ marginTop: 12 }}
+          >
+            <span className="material-symbols-outlined">logout</span>
+            Cerrar sesión
           </button>
         </div>
-      </div>
+      </aside>
 
-      <div className="flex-1 p-8">
+      {/* MAIN */}
+      <main className="ad-main">
 
-        {activeTab === 'dashboard' && (
-          <div>
-            <h1 className="text-2xl font-medium text-[#1A2F1A] mb-6">Dashboard</h1>
-            <div className="grid grid-cols-4 gap-4 mb-8">
-              {[
-                { label: 'Usuarios totales', value: stats?.total_users || 0 },
-                { label: 'Operarios', value: stats?.total_workers || 0 },
-                { label: 'Clientes', value: stats?.total_clients || 0 },
-                { label: 'Trabajos activos', value: stats?.active_jobs || 0 },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-white rounded-2xl p-5 border border-[#E8E4DA]">
-                  <div className="text-3xl font-medium text-[#1A2F1A]">{stat.value}</div>
-                  <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
+        {/* HEADER */}
+        <header className="ad-header">
+          <div className="ad-header-left">
+            <h2>Panel de Administración</h2>
+            <p>Bienvenido de nuevo, {name}. Aquí está el resumen de hoy.</p>
+          </div>
+          <div className="ad-header-right">
+            <button className="ad-btn-notif">
+              <span className="material-symbols-outlined">notifications</span>
+              <span className="ad-notif-dot" />
+            </button>
+            <div className="ad-divider" />
+            <div className="ad-admin-avatar-sm">
+              {name.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        </header>
+
+        {/* STATS */}
+        <div className="ad-stats">
+          <div className="ad-stat-card neutral">
+            <span className="ad-stat-label">Total Usuarios</span>
+            <div className="ad-stat-bottom">
+              <span className="ad-stat-value">1,284</span>
+              <span className="ad-stat-trend">
+                <span className="material-symbols-outlined">trending_up</span>
+                +12%
+              </span>
+            </div>
+          </div>
+          <div className="ad-stat-card amber">
+            <span className="ad-stat-label">Operarios Pendientes</span>
+            <div className="ad-stat-bottom">
+              <span className="ad-stat-value">24</span>
+              <span className="material-symbols-outlined ad-stat-icon">pending_actions</span>
+            </div>
+          </div>
+          <div className="ad-stat-card neutral">
+            <span className="ad-stat-label">Trabajos Activos</span>
+            <div className="ad-stat-bottom">
+              <span className="ad-stat-value">456</span>
+              <span className="material-symbols-outlined ad-stat-icon">engineering</span>
+            </div>
+          </div>
+          <div className="ad-stat-card red">
+            <span className="ad-stat-label">Reviews Reportadas</span>
+            <div className="ad-stat-bottom">
+              <span className="ad-stat-value">08</span>
+              <span className="material-symbols-outlined ad-stat-icon">warning</span>
+            </div>
+          </div>
+        </div>
+
+        {/* MAIN GRID */}
+        <div className="ad-grid">
+
+          {/* LEFT: Pending Workers Table */}
+          <div className="ad-table-card">
+            <div className="ad-table-header">
+              <h3>Operarios Pendientes de Aprobación</h3>
+              <button>Ver Todos</button>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="ad-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Especialidad</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingWorkers.map((w, i) => (
+                    <tr key={i}>
+                      <td>
+                        <div className="ad-worker-cell">
+                          <div className={`ad-worker-initial ${w.color}`}>
+                            {w.initial}
+                          </div>
+                          <span className="ad-worker-name">{w.name}</span>
+                        </div>
+                      </td>
+                      <td className="ad-specialty">{w.specialty}</td>
+                      <td className="ad-date">{w.date}</td>
+                      <td>
+                        <div className="ad-actions">
+                          <button className="ad-btn-approve">Aprobar</button>
+                          <button className="ad-btn-reject">Rechazar</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* RIGHT: Activity Timeline */}
+          <div className="ad-activity-card">
+            <h3>Actividad Reciente</h3>
+            <div className="ad-timeline">
+              {activity.map((item, i) => (
+                <div key={i} className="ad-timeline-item">
+                  <div className={`ad-timeline-dot ${item.dot}`} />
+                  <p className="ad-timeline-text">{item.text}</p>
+                  <span className="ad-timeline-time">{item.time}</span>
                 </div>
               ))}
             </div>
-            {stats?.pending_workers > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5">
-                <p className="text-sm font-medium text-yellow-800">
-                  {stats.pending_workers} operario(s) esperando aprobacion
-                </p>
-                <button onClick={() => setActiveTab('workers')} className="text-xs text-yellow-700 underline mt-1">
-                  Ver operarios pendientes
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'workers' && (
-          <div>
-            <h1 className="text-2xl font-medium text-[#1A2F1A] mb-6">
-              Operarios pendientes
-              {workers.length > 0 && (
-                <span className="ml-2 bg-yellow-100 text-yellow-700 text-sm px-2 py-0.5 rounded-full">
-                  {workers.length}
-                </span>
-              )}
-            </h1>
-            {workers.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-[#E8E4DA] p-12 text-center">
-                <p className="text-gray-400 text-sm">No hay operarios pendientes de aprobacion</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {workers.map((worker) => (
-                  <div key={worker.id} className="bg-white rounded-2xl border border-[#E8E4DA] p-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-10 h-10 rounded-full bg-[#1A2F1A] flex items-center justify-center text-white text-sm font-medium">
-                            {worker.user?.name?.charAt(0) || 'O'}
-                          </div>
-                          <div>
-                            <p className="font-medium text-[#1A2F1A] text-sm">{worker.user?.name}</p>
-                            <p className="text-xs text-gray-400">{worker.user?.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 flex-wrap mt-2">
-                          {worker.categories?.map((cat: string) => (
-                            <span key={cat} className="text-xs bg-[#F5F2ED] text-gray-500 px-2 py-1 rounded-full">
-                              {cat}
-                            </span>
-                          ))}
-                        </div>
-                        {worker.bio && (
-                          <p className="text-xs text-gray-400 mt-2 max-w-md">{worker.bio}</p>
-                        )}
-                        {worker.cv_url && (
-                          <a href={worker.cv_url} target="_blank" rel="noreferrer" className="text-xs text-[#1A2F1A] underline mt-1 block">
-                            Ver CV
-                          </a>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleApprove(worker.user_id)}
-                          className="bg-green-600 text-white text-xs px-4 py-2 rounded-xl hover:bg-green-700 transition-colors"
-                        >
-                          Aprobar
-                        </button>
-                        <button
-                          onClick={() => handleSuspend(worker.user_id)}
-                          className="bg-red-50 text-red-600 border border-red-200 text-xs px-4 py-2 rounded-xl hover:bg-red-100 transition-colors"
-                        >
-                          Rechazar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'users' && (
-          <div>
-            <h1 className="text-2xl font-medium text-[#1A2F1A] mb-6">Usuarios</h1>
-            <div className="bg-white rounded-2xl border border-[#E8E4DA] p-12 text-center">
-              <p className="text-gray-400 text-sm">Lista de usuarios - proximamente</p>
+            <div className="ad-activity-footer">
+              <button className="ad-btn-view-all">Ver Registro Completo</button>
             </div>
           </div>
-        )}
 
-        {activeTab === 'jobs' && (
-          <div>
-            <h1 className="text-2xl font-medium text-[#1A2F1A] mb-6">Trabajos</h1>
-            <div className="bg-white rounded-2xl border border-[#E8E4DA] p-12 text-center">
-              <p className="text-gray-400 text-sm">Lista de trabajos - proximamente</p>
-            </div>
-          </div>
-        )}
-
-      </div>
+        </div>
+      </main>
     </div>
   )
 }
