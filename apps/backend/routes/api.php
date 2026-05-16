@@ -17,7 +17,7 @@ Route::prefix('v1')->group(function () {
         Route::post('login',    [AuthController::class, 'login']);
     });
 
- 
+
     // Rutas públicas del marketplace
     Route::get('jobs',                 [JobController::class, 'index']);
     Route::get('jobs/{id}',            [JobController::class, 'show']);
@@ -69,6 +69,8 @@ Route::prefix('v1')->group(function () {
             Route::patch('users/{id}/suspend',         [AdminController::class, 'suspendUser']);
             Route::get('jobs',                         [AdminController::class, 'listJobs']);
             Route::get('reviews/flagged',              [AdminController::class, 'flaggedReviews']);
+            Route::patch('workers/{id}/reject',        [AdminController::class, 'rejectWorker']);
+            Route::get('stats',                        [AdminController::class, 'stats']);
         });
 
     });
