@@ -1,25 +1,31 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
 import '../../styles/worker-dashboard.css'
 
+import WorkerProfile from './sections/WorkerProfile'
+import WorkerSkills from './sections/WorkerSkills'
+import WorkerCV from './sections/WorkerCV'
+import WorkerJobs from './sections/WorkerJobs'
+import WorkerApplications from './sections/WorkerApplications'
+import WorkerSettings from './sections/WorkerSettings'
+
 const navItems = [
-  { icon: 'dashboard', label: 'Dashboard', active: true },
-  { icon: 'person', label: 'Mi Perfil' },
-  { icon: 'construction', label: 'Mis Habilidades' },
-  { icon: 'description', label: 'Mi CV' },
-  { icon: 'work', label: 'Trabajos Disponibles' },
-  { icon: 'send', label: 'Mis Postulaciones' },
-  { icon: 'chat', label: 'Chat' },
-  { icon: 'settings', label: 'Configuración' },
+  { icon: 'dashboard', label: 'Dashboard', key: 'dashboard' },
+  { icon: 'person', label: 'Mi Perfil', key: 'profile' },
+  { icon: 'construction', label: 'Mis Habilidades', key: 'skills' },
+  { icon: 'description', label: 'Mi CV', key: 'cv' },
+  { icon: 'work', label: 'Trabajos Disponibles', key: 'jobs' },
+  { icon: 'send', label: 'Mis Postulaciones', key: 'applications' },
+  { icon: 'chat', label: 'Chat', key: 'chat' },
+  { icon: 'settings', label: 'Configuración', key: 'settings' },
 ]
 
-function WorkerDashboard() {
+function DashboardHome() {
+  const { user } = useAuth()
   const navigate = useNavigate()
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const name = user.name?.split(' ')[0] || 'Operario'
-
   const [profile, setProfile] = useState<any>(null)
   const [jobs, setJobs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -42,12 +48,6 @@ function WorkerDashboard() {
     fetchData()
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    navigate('/login')
-  }
-
   const stats = [
     { label: 'Postulaciones Enviadas', value: '0', icon: 'send' },
     { label: 'Trabajos Completados', value: '0', icon: 'check_circle' },
@@ -63,6 +63,218 @@ function WorkerDashboard() {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  }
+
+  return (
+    <>
+      <motion.div
+        className="wd-stats"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {stats.map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            className="wd-stat-card"
+            variants={itemVariants}
+            whileHover={{ y: -6, boxShadow: '0 12px 32px rgba(26,47,26,0.12)' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <p className="stat-label">{stat.label}</p>
+              <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#3f6743' }}>
+                {stat.icon}
+              </span>
+            </div>
+            <p className="stat-value">{loading ? '...' : stat.value}</p>
+            {i === 3 && !loading && (
+              <div className="wd-progress-bar" style={{ marginTop: 8 }}>
+                <motion.div
+                  className="wd-progress-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: profile ? '85%' : '20%' }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                />
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </motion.div>
+
+      <div className="wd-grid">
+        <section>
+          <motion.div
+            className="wd-section-header"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h3>Trabajos Disponibles</h3>
+            <a href="#">Ver Todo</a>
+          </motion.div>
+
+          <div className="wd-jobs">
+            {loading ? (
+              [1, 2, 3].map(i => (
+                <motion.div
+                  key={i}
+                  className="wd-job-card"
+                  style={{ height: 100, background: '#efeeea', borderRadius: 16 }}
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                />
+              ))
+            ) : jobs.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                style={{ padding: '32px', textAlign: 'center', color: '#737971' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 48, display: 'block', marginBottom: 12 }}>
+                  work_off
+                </span>
+                No hay trabajos disponibles aún.
+              </motion.div>
+            ) : (
+              jobs.map((job, i) => (
+                <motion.article
+                  key={job.id}
+                  className="wd-job-card"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + i * 0.1 }}
+                  whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(26,47,26,0.1)' }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div className="wd-job-tags">
+                      <span className="wd-tag wd-tag-skill">{job.category || 'Construcción'}</span>
+                      {job.status === 'published' && <span className="wd-tag wd-tag-urgent">Activo</span>}
+                    </div>
+                    <h4 className="wd-job-title">{job.title}</h4>
+                    <p className="wd-job-client">{job.location || 'Colombia'}</p>
+                    <div className="wd-job-meta">
+                      <span className="wd-job-price">
+                        ${Number(job.budget_min || 0).toLocaleString()} - ${Number(job.budget_max || 0).toLocaleString()}
+                      </span>
+                      <span className="wd-job-time">
+                        <span className="material-symbols-outlined">schedule</span>
+                        {new Date(job.created_at).toLocaleDateString('es-CO')}
+                      </span>
+                    </div>
+                  </div>
+                  <motion.button
+                    className="wd-btn-outline"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Ver Detalles
+                  </motion.button>
+                </motion.article>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section>
+          <motion.div
+            className="wd-section-header"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h3>Mi Perfil</h3>
+          </motion.div>
+
+          <motion.div
+            className="wd-applications"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            {[
+              { label: 'Nombre completo', done: !!user?.name },
+              { label: 'Perfil de operario', done: !!profile },
+              { label: 'Habilidades', done: false },
+              { label: 'CV subido', done: false },
+            ].map((item, i) => (
+              <motion.div
+                key={item.label}
+                className="wd-app-item"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + i * 0.1 }}
+              >
+                <div>
+                  <p className="wd-app-title">{item.label}</p>
+                </div>
+                <span className={`wd-status ${item.done ? 'wd-status-accepted' : 'wd-status-pending'}`}>
+                  {item.done ? 'Completado' : 'Pendiente'}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            className="wd-banner"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <p className="wd-banner-label">Consejo Semanal</p>
+            <h4>Completa tu perfil para acceder a proyectos Premium.</h4>
+            <motion.button
+              onClick={() => navigate('/worker/onboarding')}
+              style={{
+                marginTop: 12, background: '#bdebbd', color: '#436c47',
+                border: 'none', padding: '8px 16px', borderRadius: 9999,
+                fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif'
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Completar Perfil →
+            </motion.button>
+          </motion.div>
+        </section>
+      </div>
+    </>
+  )
+}
+
+function WorkerDashboard() {
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const name = user?.name?.split(' ')[0] || 'Operario'
+  const [activeSection, setActiveSection] = useState('dashboard')
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const sectionTitles: Record<string, string> = {
+    dashboard: 'Dashboard',
+    profile: 'Mi Perfil',
+    skills: 'Mis Habilidades',
+    cv: 'Mi CV',
+    jobs: 'Trabajos Disponibles',
+    applications: 'Mis Postulaciones',
+    chat: 'Chat',
+    settings: 'Configuración',
+  }
+
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'profile': return <WorkerProfile />
+      case 'skills': return <WorkerSkills />
+      case 'cv': return <WorkerCV />
+      case 'jobs': return <WorkerJobs />
+      case 'applications': return <WorkerApplications />
+      case 'settings': return <WorkerSettings />
+      default: return <DashboardHome />
+    }
   }
 
   return (
@@ -82,8 +294,12 @@ function WorkerDashboard() {
         <nav className="wd-sidebar-nav">
           {navItems.map((item, i) => (
             <motion.button
-              key={item.label}
-              className={`wd-nav-item ${item.active ? 'active' : ''}`}
+              key={item.key}
+              className={`wd-nav-item ${activeSection === item.key ? 'active' : ''}`}
+              onClick={() => {
+                if (item.key === 'chat') navigate('/chat')
+                else setActiveSection(item.key)
+              }}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 + i * 0.05 }}
@@ -109,7 +325,7 @@ function WorkerDashboard() {
               {name.charAt(0).toUpperCase()}
             </motion.div>
             <div>
-              <div className="name">{user.name || 'Operario'}</div>
+              <div className="name">{user?.name || 'Operario'}</div>
               <span className="wd-user-badge">Operario</span>
             </div>
           </div>
@@ -136,12 +352,9 @@ function WorkerDashboard() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <div className="wd-header-left">
-            <h2>Buenos días, {name}.</h2>
+            <h2>{sectionTitles[activeSection]}</h2>
             <div className="wd-header-meta">
-              <span className="wd-badge-pending">
-                {profile ? 'Perfil Activo' : 'Pendiente Aprobación'}
-              </span>
-              <p>{profile ? 'Tu perfil está verificado.' : 'Tu perfil está bajo revisión editorial.'}</p>
+              <p>Bienvenido de nuevo, {name}.</p>
             </div>
           </div>
           <div className="wd-header-right">
@@ -154,6 +367,7 @@ function WorkerDashboard() {
             </motion.button>
             <motion.button
               className="wd-btn-primary"
+              onClick={() => setActiveSection('jobs')}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
             >
@@ -162,180 +376,19 @@ function WorkerDashboard() {
           </div>
         </motion.header>
 
-        {/* STATS */}
-        <motion.div
-          className="wd-stats"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {stats.map((stat, i) => (
+        {/* SECTION CONTENT */}
+        <div style={{ padding: '24px 32px', overflowY: 'auto', flex: 1 }}>
+          <AnimatePresence mode="wait">
             <motion.div
-              key={stat.label}
-              className="wd-stat-card"
-              variants={itemVariants}
-              whileHover={{ y: -6, boxShadow: '0 12px 32px rgba(26,47,26,0.12)' }}
-              transition={{ duration: 0.3 }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <p className="stat-label">{stat.label}</p>
-                <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#3f6743' }}>
-                  {stat.icon}
-                </span>
-              </div>
-              <p className="stat-value">{loading ? '...' : stat.value}</p>
-              {i === 3 && !loading && (
-                <div className="wd-progress-bar" style={{ marginTop: 8 }}>
-                  <motion.div
-                    className="wd-progress-fill"
-                    initial={{ width: 0 }}
-                    animate={{ width: profile ? '85%' : '20%' }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                  />
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* MAIN GRID */}
-        <div className="wd-grid">
-
-          {/* LEFT: Jobs */}
-          <section>
-            <motion.div
-              className="wd-section-header"
-              initial={{ opacity: 0, y: 10 }}
+              key={activeSection}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.35 }}
             >
-              <h3>Trabajos Disponibles</h3>
-              <a href="#">Ver Todo</a>
+              {renderSection()}
             </motion.div>
-
-            <div className="wd-jobs">
-              {loading ? (
-                [1, 2, 3].map(i => (
-                  <motion.div
-                    key={i}
-                    className="wd-job-card"
-                    style={{ height: 100, background: '#efeeea', borderRadius: 16 }}
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                  />
-                ))
-              ) : jobs.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  style={{ padding: '32px', textAlign: 'center', color: '#737971' }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 48, display: 'block', marginBottom: 12 }}>work_off</span>
-                  No hay trabajos disponibles aún.
-                </motion.div>
-              ) : (
-                jobs.map((job, i) => (
-                  <motion.article
-                    key={job.id}
-                    className="wd-job-card"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 + i * 0.1 }}
-                    whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(26,47,26,0.1)' }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div className="wd-job-tags">
-                        <span className="wd-tag wd-tag-skill">{job.category || 'Construcción'}</span>
-                        {job.status === 'published' && <span className="wd-tag wd-tag-urgent">Activo</span>}
-                      </div>
-                      <h4 className="wd-job-title">{job.title}</h4>
-                      <p className="wd-job-client">{job.location || 'Colombia'}</p>
-                      <div className="wd-job-meta">
-                        <span className="wd-job-price">${Number(job.budget_min || 0).toLocaleString()} - ${Number(job.budget_max || 0).toLocaleString()}</span>
-                        <span className="wd-job-time">
-                          <span className="material-symbols-outlined">schedule</span>
-                          {new Date(job.created_at).toLocaleDateString('es-CO')}
-                        </span>
-                      </div>
-                    </div>
-                    <motion.button
-                      className="wd-btn-outline"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Ver Detalles
-                    </motion.button>
-                  </motion.article>
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* RIGHT: Profile completion + Banner */}
-          <section>
-            <motion.div
-              className="wd-section-header"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <h3>Mi Perfil</h3>
-            </motion.div>
-
-            <motion.div
-              className="wd-applications"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              {[
-                { label: 'Nombre completo', done: !!user.name },
-                { label: 'Perfil de operario', done: !!profile },
-                { label: 'Habilidades', done: false },
-                { label: 'CV subido', done: false },
-              ].map((item, i) => (
-                <motion.div
-                  key={item.label}
-                  className="wd-app-item"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + i * 0.1 }}
-                >
-                  <div>
-                    <p className="wd-app-title">{item.label}</p>
-                  </div>
-                  <span className={`wd-status ${item.done ? 'wd-status-accepted' : 'wd-status-pending'}`}>
-                    {item.done ? 'Completado' : 'Pendiente'}
-                  </span>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            <motion.div
-              className="wd-banner"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <p className="wd-banner-label">Consejo Semanal</p>
-              <h4>Completa tu perfil para acceder a proyectos Premium.</h4>
-              <motion.button
-                onClick={() => navigate('/worker/onboarding')}
-                style={{
-                  marginTop: 12, background: '#bdebbd', color: '#436c47',
-                  border: 'none', padding: '8px 16px', borderRadius: 9999,
-                  fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif'
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Completar Perfil →
-              </motion.button>
-            </motion.div>
-          </section>
-
+          </AnimatePresence>
         </div>
 
         {/* FOOTER */}

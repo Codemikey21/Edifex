@@ -39,9 +39,12 @@ class AuthController extends Controller
 
         $token = JWTAuth::fromUser($user);
 
+        $role = $user->getRoleNames()->first() ?? $user->role;
+        $userData = array_merge($user->toArray(), ['role' => $role]);
+
         return response()->json([
             'message' => 'Usuario registrado exitosamente',
-            'user'    => $user,
+            'user'    => $userData,
             'token'   => $token,
         ], 201);
     }
@@ -56,10 +59,14 @@ class AuthController extends Controller
             ], 401);
         }
 
+        $user = auth('api')->user();
+        $role = $user->getRoleNames()->first() ?? $user->role;
+        $userData = array_merge($user->toArray(), ['role' => $role]);
+
         return response()->json([
             'message' => 'Login exitoso',
             'token'   => $token,
-            'user'    => auth('api')->user(),
+            'user'    => $userData,
         ]);
     }
 
@@ -74,8 +81,12 @@ class AuthController extends Controller
 
     public function me(): JsonResponse
     {
+        $user = auth('api')->user();
+        $role = $user->getRoleNames()->first() ?? $user->role;
+        $userData = array_merge($user->toArray(), ['role' => $role]);
+
         return response()->json([
-            'user' => auth('api')->user(),
+            'user' => $userData,
         ]);
     }
 }

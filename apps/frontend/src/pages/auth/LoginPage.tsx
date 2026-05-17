@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
 import '../../styles/login.css'
 
 function LoginPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,8 +19,7 @@ function LoginPage() {
     setLoading(true)
     try {
       const res = await api.post('/auth/login', form)
-      localStorage.setItem('token', res.data.token)
-      localStorage.setItem('user', JSON.stringify(res.data.user))
+      login(res.data.token, res.data.user)
       const role = res.data.user.role
       if (role === 'admin') navigate('/admin')
       else if (role === 'worker') navigate('/worker/dashboard')
