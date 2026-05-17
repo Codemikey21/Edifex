@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import api from '../../services/api'
 import '../../styles/admin-dashboard.css'
 
@@ -15,7 +16,6 @@ const navItems = [
 interface Stats {
   total_users: number
   total_workers: number
-  total_clients: number
   active_jobs: number
   pending_workers: number
   flagged_reviews: number
@@ -24,14 +24,8 @@ interface Stats {
 interface Worker {
   user_id: number
   status: string
-  bio: string
   created_at: string
-  user: {
-    id: number
-    name: string
-    email: string
-    created_at: string
-  }
+  user: { id: number; name: string; email: string }
 }
 
 interface ActivityItem {
@@ -62,15 +56,13 @@ function AdminDashboard() {
       setActivity(dashRes.data.activity || [])
       setWorkers(workersRes.data.data || [])
     } catch (err) {
-      console.error('Error fetching admin data:', err)
+      console.error(err)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  useEffect(() => { fetchData() }, [])
 
   const handleApprove = async (userId: number) => {
     setActionLoading(userId)
@@ -79,7 +71,7 @@ function AdminDashboard() {
       setWorkers(prev => prev.filter(w => w.user_id !== userId))
       setStats(prev => prev ? { ...prev, pending_workers: prev.pending_workers - 1 } : prev)
     } catch (err) {
-      console.error('Error approving worker:', err)
+      console.error(err)
     } finally {
       setActionLoading(null)
     }
@@ -92,7 +84,7 @@ function AdminDashboard() {
       setWorkers(prev => prev.filter(w => w.user_id !== userId))
       setStats(prev => prev ? { ...prev, pending_workers: prev.pending_workers - 1 } : prev)
     } catch (err) {
-      console.error('Error rejecting worker:', err)
+      console.error(err)
     } finally {
       setActionLoading(null)
     }
@@ -105,120 +97,188 @@ function AdminDashboard() {
   }
 
   const getInitial = (name: string) => name?.charAt(0).toUpperCase() || '?'
-  const getInitialColor = (i: number) => {
-    const colors = ['green', 'teal', 'pink', 'gray']
-    return colors[i % colors.length]
+  const getInitialColor = (i: number) => ['green', 'teal', 'pink', 'gray'][i % 4]
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   }
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('es-CO', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    })
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   }
+
+  const statCards = [
+    { label: 'Total Usuarios', value: stats?.total_users ?? 0, type: 'neutral', icon: 'people', trend: `${stats?.total_workers ?? 0} operarios` },
+    { label: 'Operarios Pendientes', value: stats?.pending_workers ?? 0, type: 'amber', icon: 'pending_actions' },
+    { label: 'Trabajos Activos', value: stats?.active_jobs ?? 0, type: 'neutral', icon: 'engineering' },
+    { label: 'Reviews Reportadas', value: stats?.flagged_reviews ?? 0, type: 'red', icon: 'warning' },
+  ]
 
   return (
     <div className="ad-layout">
 
       {/* SIDEBAR */}
-      <aside className="ad-sidebar">
+      <motion.aside
+        className="ad-sidebar"
+        initial={{ x: -256 }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
         <div className="ad-sidebar-logo"><h1>EDIFEX</h1></div>
+
         <nav className="ad-sidebar-nav">
-          {navItems.map((item) => (
-            <button key={item.label} className={`ad-nav-item ${item.active ? 'active' : ''}`}>
+          {navItems.map((item, i) => (
+            <motion.button
+              key={item.label}
+              className={`ad-nav-item ${item.active ? 'active' : ''}`}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 + i * 0.05 }}
+              whileHover={{ x: 4 }}
+            >
               <span className="material-symbols-outlined">{item.icon}</span>
               {item.label}
-            </button>
+            </motion.button>
           ))}
         </nav>
+
         <div className="ad-sidebar-footer">
           <div className="ad-admin-info">
-            <div className="ad-admin-avatar">{name.charAt(0).toUpperCase()}</div>
+            <motion.div className="ad-admin-avatar" whileHover={{ scale: 1.1 }}>
+              {name.charAt(0).toUpperCase()}
+            </motion.div>
             <div>
               <div className="ad-admin-name">{user.name || 'Admin'}</div>
               <span className="ad-admin-badge">Administrador</span>
             </div>
           </div>
-          <button onClick={handleLogout} className="ad-nav-item" style={{ marginTop: 12 }}>
+          <motion.button
+            onClick={handleLogout}
+            className="ad-nav-item"
+            style={{ marginTop: 12 }}
+            whileHover={{ x: 4 }}
+          >
             <span className="material-symbols-outlined">logout</span>
             Cerrar sesión
-          </button>
+          </motion.button>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* MAIN */}
       <main className="ad-main">
 
         {/* HEADER */}
-        <header className="ad-header">
+        <motion.header
+          className="ad-header"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           <div className="ad-header-left">
             <h2>Panel de Administración</h2>
             <p>Bienvenido de nuevo, {name}. Aquí está el resumen de hoy.</p>
           </div>
           <div className="ad-header-right">
-            <button className="ad-btn-notif">
+            <motion.button
+              className="ad-btn-notif"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
               <span className="material-symbols-outlined">notifications</span>
               {stats && stats.pending_workers > 0 && <span className="ad-notif-dot" />}
-            </button>
+            </motion.button>
             <div className="ad-divider" />
-            <div className="ad-admin-avatar-sm">{name.charAt(0).toUpperCase()}</div>
+            <motion.div className="ad-admin-avatar-sm" whileHover={{ scale: 1.1 }}>
+              {name.charAt(0).toUpperCase()}
+            </motion.div>
           </div>
-        </header>
+        </motion.header>
 
         {/* STATS */}
         {loading ? (
-          <div style={{ padding: '40px 0', color: '#737971', fontSize: 16 }}>
-            Cargando datos...
-          </div>
+          <motion.div
+            className="ad-stats"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {[1,2,3,4].map(i => (
+              <motion.div
+                key={i}
+                variants={itemVariants}
+                style={{ height: 100, borderRadius: 16, background: '#efeeea' }}
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.15 }}
+              />
+            ))}
+          </motion.div>
         ) : (
-          <div className="ad-stats">
-            <div className="ad-stat-card neutral">
-              <span className="ad-stat-label">Total Usuarios</span>
-              <div className="ad-stat-bottom">
-                <span className="ad-stat-value">{stats?.total_users ?? 0}</span>
-                <span className="ad-stat-trend">
-                  <span className="material-symbols-outlined">trending_up</span>
-                  {stats?.total_workers ?? 0} operarios
-                </span>
-              </div>
-            </div>
-            <div className="ad-stat-card amber">
-              <span className="ad-stat-label">Operarios Pendientes</span>
-              <div className="ad-stat-bottom">
-                <span className="ad-stat-value">{stats?.pending_workers ?? 0}</span>
-                <span className="material-symbols-outlined ad-stat-icon">pending_actions</span>
-              </div>
-            </div>
-            <div className="ad-stat-card neutral">
-              <span className="ad-stat-label">Trabajos Activos</span>
-              <div className="ad-stat-bottom">
-                <span className="ad-stat-value">{stats?.active_jobs ?? 0}</span>
-                <span className="material-symbols-outlined ad-stat-icon">engineering</span>
-              </div>
-            </div>
-            <div className="ad-stat-card red">
-              <span className="ad-stat-label">Reviews Reportadas</span>
-              <div className="ad-stat-bottom">
-                <span className="ad-stat-value">{stats?.flagged_reviews ?? 0}</span>
-                <span className="material-symbols-outlined ad-stat-icon">warning</span>
-              </div>
-            </div>
-          </div>
+          <motion.div
+            className="ad-stats"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {statCards.map((card) => (
+              <motion.div
+                key={card.label}
+                className={`ad-stat-card ${card.type}`}
+                variants={itemVariants}
+                whileHover={{ y: -6, boxShadow: '0 12px 32px rgba(26,47,26,0.12)' }}
+              >
+                <span className="ad-stat-label">{card.label}</span>
+                <div className="ad-stat-bottom">
+                  <motion.span
+                    className="ad-stat-value"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, type: 'spring' }}
+                  >
+                    {card.value}
+                  </motion.span>
+                  {card.trend ? (
+                    <span className="ad-stat-trend">
+                      <span className="material-symbols-outlined">trending_up</span>
+                      {card.trend}
+                    </span>
+                  ) : (
+                    <span className={`material-symbols-outlined ad-stat-icon`}>{card.icon}</span>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         )}
 
         {/* MAIN GRID */}
         <div className="ad-grid">
 
           {/* LEFT: Pending Workers Table */}
-          <div className="ad-table-card">
+          <motion.div
+            className="ad-table-card"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+          >
             <div className="ad-table-header">
               <h3>Operarios Pendientes de Aprobación</h3>
               <button onClick={fetchData}>↻ Actualizar</button>
             </div>
             <div style={{ overflowX: 'auto' }}>
               {workers.length === 0 ? (
-                <div style={{ padding: '32px 24px', color: '#737971', textAlign: 'center' }}>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  style={{ padding: '40px 24px', textAlign: 'center', color: '#737971' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 48, display: 'block', marginBottom: 12, color: '#c3c8bf' }}>
+                    how_to_reg
+                  </span>
                   No hay operarios pendientes de aprobación.
-                </div>
+                </motion.div>
               ) : (
                 <table className="ad-table">
                   <thead>
@@ -231,12 +291,20 @@ function AdminDashboard() {
                   </thead>
                   <tbody>
                     {workers.map((w, i) => (
-                      <tr key={w.user_id}>
+                      <motion.tr
+                        key={w.user_id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.6 + i * 0.08 }}
+                      >
                         <td>
                           <div className="ad-worker-cell">
-                            <div className={`ad-worker-initial ${getInitialColor(i)}`}>
+                            <motion.div
+                              className={`ad-worker-initial ${getInitialColor(i)}`}
+                              whileHover={{ scale: 1.1 }}
+                            >
                               {getInitial(w.user?.name)}
-                            </div>
+                            </motion.div>
                             <span className="ad-worker-name">{w.user?.name}</span>
                           </div>
                         </td>
@@ -244,54 +312,83 @@ function AdminDashboard() {
                         <td className="ad-date">{formatDate(w.created_at)}</td>
                         <td>
                           <div className="ad-actions">
-                            <button
+                            <motion.button
                               className="ad-btn-approve"
                               disabled={actionLoading === w.user_id}
                               onClick={() => handleApprove(w.user_id)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
                             >
                               {actionLoading === w.user_id ? '...' : 'Aprobar'}
-                            </button>
-                            <button
+                            </motion.button>
+                            <motion.button
                               className="ad-btn-reject"
                               disabled={actionLoading === w.user_id}
                               onClick={() => handleReject(w.user_id)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
                             >
                               {actionLoading === w.user_id ? '...' : 'Rechazar'}
-                            </button>
+                            </motion.button>
                           </div>
                         </td>
-                      </tr>
+                      </motion.tr>
                     ))}
                   </tbody>
                 </table>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* RIGHT: Activity Timeline */}
-          <div className="ad-activity-card">
+          <motion.div
+            className="ad-activity-card"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+          >
             <h3>Actividad Reciente</h3>
             {activity.length === 0 ? (
-              <div style={{ color: '#737971', fontSize: 14 }}>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                style={{ color: '#737971', fontSize: 14, padding: '20px 0' }}
+              >
                 No hay actividad reciente.
-              </div>
+              </motion.div>
             ) : (
               <div className="ad-timeline">
                 {activity.map((item, i) => (
-                  <div key={i} className="ad-timeline-item">
-                    <div className={`ad-timeline-dot ${item.dot}`} />
+                  <motion.div
+                    key={i}
+                    className="ad-timeline-item"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 + i * 0.1 }}
+                  >
+                    <motion.div
+                      className={`ad-timeline-dot ${item.dot}`}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.8 + i * 0.1, type: 'spring' }}
+                    />
                     <p className="ad-timeline-text">{item.text}</p>
                     <span className="ad-timeline-time">{item.time}</span>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
             <div className="ad-activity-footer">
-              <button className="ad-btn-view-all" onClick={fetchData}>
+              <motion.button
+                className="ad-btn-view-all"
+                onClick={fetchData}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 Actualizar Actividad
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </main>

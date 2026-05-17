@@ -1,23 +1,44 @@
-import { useEffect, useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import api from '../../services/api'
+import '../../styles/chat.css'
+
+interface Conversation {
+  id: number
+  other_user: { id: number; name: string; email: string }
+  last_message?: string
+  updated_at: string
+  unread?: boolean
+}
+
+interface Message {
+  id: number
+  content: string
+  sender_id: number
+  created_at: string
+}
 
 function ChatPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
-  const [conversations, setConversations] = useState<any[]>([])
-  const [activeConv, setActiveConv] = useState<any>(null)
-  const [messages, setMessages] = useState<any[]>([])
-  const [newMessage, setNewMessage] = useState('')
-  const [loading, setLoading] = useState(true)
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [activeConv, setActiveConv] = useState<Conversation | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [search, setSearch] = useState('')
+
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (!storedUser) { navigate('/login'); return }
-    setUser(JSON.parse(storedUser))
     fetchConversations()
   }, [])
+
+  useEffect(() => {
+    if (activeConv) fetchMessages(activeConv.id)
+  }, [activeConv])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -27,8 +48,9 @@ function ChatPage() {
     try {
       const res = await api.get('/chat/conversations')
       setConversations(res.data.data || [])
-    } catch (error) {
-      console.error('Error cargando conversaciones')
+      if (res.data.data?.length > 0) setActiveConv(res.data.data[0])
+    } catch (err) {
+      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -38,168 +60,267 @@ function ChatPage() {
     try {
       const res = await api.get(`/chat/conversations/${convId}/messages`)
       setMessages(res.data.data || [])
-    } catch (error) {
-      console.error('Error cargando mensajes')
+    } catch (err) {
+      console.error(err)
     }
   }
 
-  const handleSelectConv = (conv: any) => {
-    setActiveConv(conv)
-    fetchMessages(conv.id)
-  }
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const sendMessage = async () => {
     if (!newMessage.trim() || !activeConv) return
+    setSending(true)
     try {
       const res = await api.post('/chat/messages', {
         conversation_id: activeConv.id,
-        content: newMessage,
-        type: 'text',
+        content: newMessage.trim(),
       })
-      setMessages([...messages, res.data.data])
+      setMessages(prev => [...prev, res.data.data])
       setNewMessage('')
-    } catch (error) {
-      console.error('Error enviando mensaje')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSending(false)
     }
   }
 
-  const getOtherUser = (conv: any) => {
-    if (!user) return null
-    return user.id === conv.client_id ? conv.worker : conv.client
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
   }
 
+  const formatTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleTimeString('es-CO', {
+      hour: '2-digit', minute: '2-digit'
+    })
+  }
+
+  const formatConvTime = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    if (days === 0) return formatTime(dateStr)
+    if (days === 1) return 'Ayer'
+    if (days < 7) return `Hace ${days} días`
+    return date.toLocaleDateString('es-CO')
+  }
+
+  const getInitials = (name: string) =>
+    name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '??'
+
+  const filteredConvs = conversations.filter(c =>
+    c.other_user?.name?.toLowerCase().includes(search.toLowerCase())
+  )
+
   return (
-    <div className="min-h-screen bg-[#F5F2ED] flex flex-col">
-      {/* Header */}
-      <div className="bg-[#1A2F1A] px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/src/assets/logo.svg" alt="Edifex" className="w-12 h-12 object-contain" />
-          <span className="text-white font-bold text-lg tracking-widest">EDIFEX</span>
+    <div className="chat-layout">
+
+      {/* LEFT SIDEBAR */}
+      <motion.aside
+        className="chat-sidebar"
+        initial={{ x: -320 }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
+        <div className="chat-sidebar-logo">
+          <h1>EDIFEX</h1>
         </div>
-        <button
-          onClick={() => navigate(-1)}
-          className="text-white/70 text-sm hover:text-white transition-colors"
-        >
-          Volver
-        </button>
-      </div>
 
-      <div className="flex flex-1 overflow-hidden" style={{ height: 'calc(100vh - 72px)' }}>
-
-        {/* Lista de conversaciones */}
-        <div className="w-72 bg-white border-r border-[#E8E4DA] flex flex-col">
-          <div className="px-5 py-4 border-b border-[#E8E4DA]">
-            <h2 className="font-medium text-[#1A2F1A] text-sm">Conversaciones</h2>
+        <div className="chat-search-wrap">
+          <div className="chat-search">
+            <span className="material-symbols-outlined">search</span>
+            <input
+              type="text"
+              placeholder="Buscar conversaciones..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
+        </div>
 
+        <div className="chat-conversations">
           {loading ? (
-            <div className="p-4 space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-14 bg-[#F5F2ED] rounded-xl animate-pulse" />
-              ))}
-            </div>
-          ) : conversations.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center p-6 text-center">
-              <p className="text-gray-400 text-xs">No tienes conversaciones aun</p>
-            </div>
+            [1, 2, 3].map(i => (
+              <motion.div
+                key={i}
+                style={{ height: 64, borderRadius: 12, background: 'rgba(180,206,175,0.1)', margin: '0 8px' }}
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
+              />
+            ))
+          ) : filteredConvs.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{ padding: '32px 16px', textAlign: 'center', color: 'rgba(180,206,175,0.5)', fontSize: 13 }}
+            >
+              No hay conversaciones aún.
+            </motion.div>
           ) : (
-            <div className="flex-1 overflow-y-auto">
-              {conversations.map((conv) => {
-                const other = getOtherUser(conv)
-                return (
-                  <button
-                    key={conv.id}
-                    onClick={() => handleSelectConv(conv)}
-                    className={`w-full px-5 py-4 flex items-center gap-3 hover:bg-[#F5F2ED] transition-colors border-b border-[#F0EBE0] ${
-                      activeConv?.id === conv.id ? 'bg-[#F5F2ED]' : ''
-                    }`}
-                  >
-                    <div className="w-9 h-9 rounded-full bg-[#1A2F1A] flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                      {other?.name?.charAt(0) || 'U'}
-                    </div>
-                    <div className="text-left overflow-hidden">
-                      <p className="text-sm font-medium text-[#1A2F1A] truncate">{other?.name || 'Usuario'}</p>
-                      <p className="text-xs text-gray-400 truncate">
-                        {conv.last_message?.content || 'Sin mensajes aun'}
-                      </p>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
+            filteredConvs.map((conv, i) => (
+              <motion.button
+                key={conv.id}
+                className={`chat-conv-item ${activeConv?.id === conv.id ? 'active' : ''}`}
+                onClick={() => setActiveConv(conv)}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.08 }}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="chat-conv-avatar">
+                  {getInitials(conv.other_user?.name)}
+                </div>
+                <div className="chat-conv-info">
+                  <div className="chat-conv-top">
+                    <span className="chat-conv-name">{conv.other_user?.name}</span>
+                    <span className="chat-conv-time">{formatConvTime(conv.updated_at)}</span>
+                  </div>
+                  <p className="chat-conv-preview">
+                    {conv.last_message || 'Sin mensajes aún'}
+                  </p>
+                </div>
+                {conv.unread && <div className="chat-unread-dot" />}
+              </motion.button>
+            ))
           )}
         </div>
 
-        {/* Área de mensajes */}
-        <div className="flex-1 flex flex-col">
-          {!activeConv ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-gray-400 text-sm">Selecciona una conversacion</p>
-                <p className="text-gray-300 text-xs mt-1">para ver los mensajes</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Header conversacion */}
-              <div className="bg-white px-6 py-4 border-b border-[#E8E4DA] flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#1A2F1A] flex items-center justify-center text-white text-xs font-medium">
-                  {getOtherUser(activeConv)?.name?.charAt(0) || 'U'}
+        <div className="chat-sidebar-footer">
+          <button
+            className="chat-sidebar-footer-inner"
+            onClick={() => navigate('/worker/dashboard')}
+          >
+            <span className="material-symbols-outlined">arrow_back</span>
+            Volver al Dashboard
+          </button>
+        </div>
+      </motion.aside>
+
+      {/* MAIN CHAT */}
+      <main className="chat-main">
+        {!activeConv ? (
+          <motion.div
+            className="chat-empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <span className="material-symbols-outlined">chat_bubble_outline</span>
+            <h3>Selecciona una conversación</h3>
+            <p>Elige un contacto para comenzar a chatear</p>
+          </motion.div>
+        ) : (
+          <>
+            {/* HEADER */}
+            <motion.header
+              className="chat-header"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="chat-header-left">
+                <div className="chat-header-avatar">
+                  <div className="chat-header-avatar-inner">
+                    {getInitials(activeConv.other_user?.name)}
+                  </div>
+                  <span className="chat-online-dot" />
                 </div>
                 <div>
-                  <p className="font-medium text-[#1A2F1A] text-sm">{getOtherUser(activeConv)?.name}</p>
-                  <p className="text-xs text-gray-400">En linea</p>
+                  <p className="chat-header-name">{activeConv.other_user?.name}</p>
+                  <p className="chat-header-status">En línea</p>
                 </div>
               </div>
-
-              {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-3">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs px-4 py-2.5 rounded-2xl text-sm ${
-                        msg.sender_id === user?.id
-                          ? 'bg-[#1A2F1A] text-white rounded-br-sm'
-                          : 'bg-white text-[#1A2F1A] border border-[#E8E4DA] rounded-bl-sm'
-                      }`}
-                    >
-                      {msg.content}
-                      <div className={`text-xs mt-1 ${
-                        msg.sender_id === user?.id ? 'text-white/50' : 'text-gray-400'
-                      }`}>
-                        {new Date(msg.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
+              <div className="chat-header-actions">
+                <motion.button
+                  className="chat-header-btn"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <span className="material-symbols-outlined">videocam</span>
+                </motion.button>
+                <motion.button
+                  className="chat-header-btn"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <span className="material-symbols-outlined">info</span>
+                </motion.button>
               </div>
+            </motion.header>
 
-              {/* Input mensaje */}
-              <form onSubmit={handleSendMessage} className="bg-white border-t border-[#E8E4DA] px-6 py-4 flex gap-3">
+            {/* MESSAGES */}
+            <div className="chat-messages">
+              {messages.length === 0 ? (
+                <motion.div
+                  style={{ textAlign: 'center', color: '#737971', marginTop: 40 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 40, display: 'block', marginBottom: 8, color: '#c3c8bf' }}>
+                    waving_hand
+                  </span>
+                  Envía un mensaje para iniciar la conversación
+                </motion.div>
+              ) : (
+                <AnimatePresence initial={false}>
+                  {messages.map((msg, i) => {
+                    const isSent = msg.sender_id === user.id
+                    return (
+                      <motion.div
+                        key={msg.id}
+                        className={`chat-msg ${isSent ? 'sent' : 'received'}`}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div>
+                          <div className="chat-msg-bubble">{msg.content}</div>
+                          <p className="chat-msg-time">{formatTime(msg.created_at)}</p>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </AnimatePresence>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* INPUT BAR */}
+            <motion.footer
+              className="chat-input-bar"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              <div className="chat-input-inner">
+                <button className="chat-input-add">
+                  <span className="material-symbols-outlined">add_circle</span>
+                </button>
                 <input
                   type="text"
+                  placeholder="Escribe tu mensaje aquí..."
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Escribe un mensaje..."
-                  className="flex-1 bg-[#F5F2ED] border border-[#E8E4DA] rounded-xl px-4 py-2.5 text-sm text-[#1A2F1A] outline-none focus:border-[#1A2F1A] placeholder-gray-300"
+                  onChange={e => setNewMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
-                <button
-                  type="submit"
-                  disabled={!newMessage.trim()}
-                  className="bg-[#1A2F1A] text-white text-sm px-5 py-2.5 rounded-xl hover:bg-[#2D4A2D] transition-colors disabled:opacity-50"
-                >
-                  Enviar
+                <button className="chat-input-emoji">
+                  <span className="material-symbols-outlined">sentiment_satisfied</span>
                 </button>
-              </form>
-            </>
-          )}
-        </div>
-      </div>
+                <motion.button
+                  className="chat-send-btn"
+                  onClick={sendMessage}
+                  disabled={sending || !newMessage.trim()}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <span className="material-symbols-outlined">send</span>
+                </motion.button>
+              </div>
+            </motion.footer>
+          </>
+        )}
+      </main>
     </div>
   )
 }
